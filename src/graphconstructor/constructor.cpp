@@ -15,6 +15,8 @@
 
 #include <tclap/CmdLine.h>
 
+#include "../common/graphdump/graphdump.h"
+
 #include "test.h"
 #include "assemblyedgeconstructor.h"
 
@@ -124,6 +126,15 @@ int main(int argc, char * argv[])
 			"file name",
 			cmd);
 
+		TCLAP::ValueArg<std::string> gfa1("m",
+			"gfa1",
+			"output file name",
+			false,
+			"myfile.gfa1",
+			"file name",
+			cmd);
+
+
 		cmd.parse(argc, argv);		
 		using TwoPaCo::Range;
 		if (runTests.getValue())
@@ -140,9 +151,28 @@ int main(int argc, char * argv[])
 			tmpDirName.getValue(),
 			outFileName.getValue(),
 			std::cout);
+
 		
-		if (vid)
-		{
+		if (gfa1.isSet()) {
+                        char* argv[8];
+			argv[0] = "graphdump";
+			argv[1] = "-f";
+			argv[2] = "gfa1";
+			argv[3] = "-k";
+			argv[4] = new char[10];
+			std::ostringstream oss;
+			oss << kvalue.getValue();
+			strcpy(argv[4], oss.str().c_str());
+			argv[5] = new char[outFileName.getValue().length() + 1];
+			strcpy(argv[5], outFileName.getValue().c_str());
+			argv[6] = "-s";
+			argv[7] = new char[fileName.getValue()[0].length() + 1];
+			strcpy(argv[7], fileName.getValue()[0].c_str());
+                        run_graph_dump(8, argv, gfa1.getValue());
+
+		} 
+		
+		if (vid) {
 			std::cout << "Distinct junctions = " << vid->GetVerticesCount() << std::endl;
 			std::cout << std::endl;
 		}

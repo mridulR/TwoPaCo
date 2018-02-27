@@ -13,6 +13,8 @@
 #include <tclap/CmdLine.h>
 #include <tbb/parallel_sort.h>
 
+#include <graphdump/graphdump.h>
+
 #include <dnachar.h>
 #include <streamfastaparser.h>
 #include <junctionapi/junctionapi.h>
@@ -205,6 +207,7 @@ void ReadInputSequences(const std::vector<std::string> & genomes, std::vector<st
 
 class Gfa1Generator
 {
+
 public:
 	void Header(std::ostream & out) const
 	{
@@ -375,17 +378,25 @@ public:
 };
 
 template<class G>
-void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std::string> & genomes, size_t k, bool prefix, G g)
+void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std::string> & genomes, 
+	size_t k, bool prefix, G g, std::string file_name)
 {	
 	std::vector<uint64_t> chrSegmentLength;
 	std::vector<std::string> chrSegmentId;
 	std::map<std::string, std::string> chrFileName;
 
+	std::filebuf fb;
+        fb.open(file_name, std::ios::out);
+        std::ostream os(&fb);
+
 	//std::cout << "H\tVN:Z:1.0" << std::endl;
-	g.Header(std::cout);
+	//g.Header(std::cout);
+	g.Header(os);
+	
+
 
 	ReadInputSequences(genomes, chrSegmentId, chrSegmentLength, chrFileName, !prefix);
-	g.ListInputSequences(chrSegmentId, chrFileName, std::cout);
+	g.ListInputSequences(chrSegmentId, chrFileName, os);
 
 	std::vector<int64_t> currentPath;
 	const int64_t NO_SEGMENT = 0;
@@ -429,7 +440,7 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 						std::copy(buf.begin(), buf.end(), std::ostream_iterator<char>(ss));
 					}
 
-					g.Segment(segmentId, segmentSize, ss.str(), std::cout);
+					g.Segment(segmentId, segmentSize, ss.str(), os);
 					seen[Abs(segmentId)] = true;
 				}
 
@@ -446,13 +457,14 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 					assert(segmentBody[absSegmentId] == buf);
 				}
 #endif
-				g.Occurrence(segmentId, segmentSize, chrSegmentId[seqId], chrSegmentLength[seqId], begin.GetPos(), end.GetPos(), k, std::cout);
+				g.Occurrence(segmentId, segmentSize, chrSegmentId[seqId], chrSegmentLength[seqId], 
+					begin.GetPos(), end.GetPos(), k, os);
 				//std::cout << "C\t" << Abs(segmentId) << '\t' << Sign(segmentId) << '\t' << chrSegmentId[seqId] << "\t+\t" << begin.GetPos() << std::endl;
 
 				if (prevSegmentId != NO_SEGMENT)
 				{
 					//std::cout << "L\t" << Abs(prevSegmentId) << '\t' << Sign(prevSegmentId) << '\t' << Abs(segmentId) << '\t' << Sign(segmentId) << '\t' << k << 'M' << std::endl;
-					g.Edge(prevSegmentId, prevSegmentSize, segmentId, segmentSize, k, std::cout);
+					g.Edge(prevSegmentId, prevSegmentSize, segmentId, segmentSize, k, os);
 				}				
 
 				prevSegmentId = segmentId;
@@ -461,7 +473,7 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 			}
 			else
 			{
-				g.FlushPath(currentPath, chrSegmentId[seqId], k, std::cout);
+				g.FlushPath(currentPath, chrSegmentId[seqId], k, os);
 				chrReader.NextChr(chr);
 				prevSegmentId = 0;
 				begin = end;
@@ -474,7 +486,8 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 		}
 	}
 
-	g.FlushPath(currentPath, chrSegmentId[seqId], k, std::cout);
+	g.FlushPath(currentPath, chrSegmentId[seqId], k, os);
+	fb.close();
 }
 
 template<class It>
@@ -605,7 +618,9 @@ void GenerateDotOutput(const std::string & inputFileName)
 	std::cout << "}" << std::endl;
 }
 
-int main(int argc, char * argv[])
+
+
+ int my_main(int argc, char * argv[], std::string file_name)
 {
 	std::vector<std::string> format;
 	format.push_back("seq");
@@ -672,7 +687,8 @@ int main(int argc, char * argv[])
 				throw TCLAP::ArgParseException("Required argument missing\n", "seqfilename");
 			}
 
-			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(), prefix.getValue(), Gfa1Generator());
+			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(),
+				 prefix.getValue(), Gfa1Generator(), file_name);
 		}
 		else if (outputFileFormat.getValue() == format[4])
 		{
@@ -681,7 +697,8 @@ int main(int argc, char * argv[])
 				throw TCLAP::ArgParseException("Required argument missing\n", "seqfilename");
 			}
 
-			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(), prefix.getValue(), Gfa2Generator());
+			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(), 
+				prefix.getValue(), Gfa2Generator(), file_name);
 		}
 		else if (outputFileFormat.getValue() == format[5])
 		{
@@ -707,3 +724,8 @@ int main(int argc, char * argv[])
 
 	return 0;
 }
+
+void run_graph_dump(int argc, char * argv[], std::string file_name) {
+    my_main(argc, argv, file_name);
+}
+
