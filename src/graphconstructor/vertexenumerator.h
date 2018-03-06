@@ -120,6 +120,7 @@ namespace TwoPaCo
 		{
 			uint64_t realSize = uint64_t(1) << hashFunctionSeed_.BitsNumber();
 			std::unique_ptr<ConcurrentBitVector> ret(new ConcurrentBitVector(realSize));
+			std::cout<<"Hi I am here"<<std::endl;
 			ret->ReadFromFile(filterDumpFile_, false);
 			return ret;
 		}
@@ -137,6 +138,9 @@ namespace TwoPaCo
 			hashFunctionSeed_(hashFunctions, vertexLength, filterSize),
 			filterDumpFile_(tmpDirName + "/filter.bin")
 		{
+
+			std::cout<<"Hello I m here ***************************" <<std::endl;			
+
 			uint64_t realSize = uint64_t(1) << filterSize;
 			logStream << "Threads = " << threads << std::endl;
 			logStream << "Vertex length = " << vertexLength << std::endl;
