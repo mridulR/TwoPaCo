@@ -15,10 +15,14 @@
 
 #include <tclap/CmdLine.h>
 
+#include <tbb/concurrent_queue.h>
 #include "../common/graphdump/graphdump.h"
 
 #include "test.h"
 #include "assemblyedgeconstructor.h"
+
+using namespace tbb;
+using namespace std;
 
 size_t Atoi(const char * str)
 {
@@ -142,6 +146,17 @@ int main(int argc, char * argv[])
 			TwoPaCo::RunTests(10, 20, 9000, 6, Range(3, 11), Range(1, 2), Range(1, 5), Range(4, 5), 0.05, 0.1, tmpDirName.getValue());
 			return 0;
 		}
+
+		concurrent_queue<int> queue;
+    		for( int i=0; i<10; ++i ) {
+        		queue.push(i);
+		}
+    
+		typedef concurrent_queue<int>::iterator iter;
+    		for( iter i(queue.unsafe_begin()); i!=queue.unsafe_end(); ++i ) {
+        		cout << *i << " test ------ ";
+		}
+    		cout << endl;	
 		
 		std::unique_ptr<TwoPaCo::VertexEnumerator> vid = TwoPaCo::CreateEnumerator(fileName.getValue(),
 			kvalue.getValue(), filterSize.getValue(),
