@@ -379,7 +379,7 @@ public:
 };
 
 template<class G>
-void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std::string> & genomes, 
+void GenerateGfaOutput(const std::vector<std::string> & genomes, 
 	size_t k, bool prefix, G g, std::string file_name, tbb::concurrent_queue<TwoPaCo::JunctionPosition> *queue,
                 std::atomic<bool> * done)
 {	
@@ -409,7 +409,7 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 	TwoPaCo::JunctionPosition end;
 	TwoPaCo::JunctionPosition begin;
 	TwoPaCo::ChrReader chrReader(genomes);
-	TwoPaCo::JunctionPositionReader reader(inputFileName.c_str());
+	// TwoPaCo::JunctionPositionReader reader(inputFileName.c_str());
 	std::vector<bool> seen(MAX_SEGMENT_NUMBER, 0);
 	int64_t previousId = 0;
 	
@@ -725,7 +725,7 @@ void GenerateDotOutput(const std::string & inputFileName)
 
 		TCLAP::UnlabeledValueArg<std::string> inputFileName("infile",
 			"input file name",
-			true,
+			false,
 			"",
 			"file name",
 			cmd);
@@ -774,7 +774,7 @@ void GenerateDotOutput(const std::string & inputFileName)
 				throw TCLAP::ArgParseException("Required argument missing\n", "seqfilename");
 			}
 
-			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(),
+			GenerateGfaOutput(seqFileName.getValue(), kvalue.getValue(),
 				 prefix.getValue(), Gfa1Generator(), file_name, queue, done);
 		}
 		else if (outputFileFormat.getValue() == format[4])
@@ -784,7 +784,7 @@ void GenerateDotOutput(const std::string & inputFileName)
 				throw TCLAP::ArgParseException("Required argument missing\n", "seqfilename");
 			}
 
-			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(), 
+			GenerateGfaOutput(seqFileName.getValue(), kvalue.getValue(), 
 				prefix.getValue(), Gfa2Generator(), file_name, queue, done);
 		}
 		else if (outputFileFormat.getValue() == format[5])

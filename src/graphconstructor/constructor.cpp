@@ -151,16 +151,6 @@ int main(int argc, char * argv[])
 
 		std::cout << "Testing started --- > " << (*done).load(std::memory_order_relaxed) << std::endl;
     			
-		/*for( int i=0; i<10; ++i ) {
-        		queue.push(i);
-		}
-    
-		typedef concurrent_queue<int>::iterator iter;
-    		for( iter i(queue.unsafe_begin()); i!=queue.unsafe_end(); ++i ) {
-        		cout << *i << " test ------ ";
-		}
-    		cout << endl;
-		*/
 		
 		std::unique_ptr<TwoPaCo::VertexEnumerator> vid = TwoPaCo::CreateEnumerator(fileName.getValue(),
 			kvalue.getValue(), filterSize.getValue(),
@@ -177,7 +167,7 @@ int main(int argc, char * argv[])
 		std::cout << "Testing done size --- > " << queue.unsafe_size() << std::endl;
 		
 		if (gfa1.isSet()) {
-                        char* argv[8];
+                        char* argv[7];
 			argv[0] = "graphdump";
 			argv[1] = "-f";
 			argv[2] = "gfa1";
@@ -186,12 +176,12 @@ int main(int argc, char * argv[])
 			std::ostringstream oss;
 			oss << kvalue.getValue();
 			strcpy(argv[4], oss.str().c_str());
-			argv[5] = new char[outFileName.getValue().length() + 1];
-			strcpy(argv[5], outFileName.getValue().c_str());
-			argv[6] = "-s";
-			argv[7] = new char[fileName.getValue()[0].length() + 1];
-			strcpy(argv[7], fileName.getValue()[0].c_str());
-                        run_graph_dump(8, argv, gfa1.getValue(), &queue, done);
+			// argv[5] = new char[outFileName.getValue().length() + 1];
+			// strcpy(argv[5], outFileName.getValue().c_str());
+			argv[5] = "-s";
+			argv[6] = new char[fileName.getValue()[0].length() + 1];
+			strcpy(argv[6], fileName.getValue()[0].c_str());
+                        run_graph_dump(7, argv, gfa1.getValue(), &queue, done);
 
 		} 
 		
