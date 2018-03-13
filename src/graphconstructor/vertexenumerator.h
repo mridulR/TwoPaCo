@@ -53,7 +53,7 @@ namespace TwoPaCo
 		const std::string & outFileName,
 		std::ostream & logStream,
 		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
-                std::atomic<uint8_t> * done);
+                std::atomic<bool> * done);
 
 	template<size_t CAPACITY>
 	class VertexEnumeratorImpl : public VertexEnumerator
@@ -137,7 +137,7 @@ namespace TwoPaCo
 			const std::string & tmpDirName,
 			const std::string & outFileNamePrefix,
 			std::ostream & logStream, tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
- 			std::atomic<uint8_t> * done) : vertexSize_(vertexLength),
+ 			std::atomic<bool> * done) : vertexSize_(vertexLength),
 			hashFunctionSeed_(hashFunctions, vertexLength, filterSize),
 			filterDumpFile_(tmpDirName + "/filter.bin")
 		{
@@ -421,6 +421,9 @@ namespace TwoPaCo
 			{
 				throw std::runtime_error(*error);
 			}
+
+			// Update atomic variable done = true
+			(*done).store(true, std::memory_order_relaxed);
 
 			logStream << "True marks count: " << occurence << std::endl;
 			logStream << "Edges construction time: " << time(0) - mark << std::endl;

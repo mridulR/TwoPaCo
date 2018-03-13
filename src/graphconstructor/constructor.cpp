@@ -147,7 +147,9 @@ int main(int argc, char * argv[])
 		}
 
 		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue;
-		std::atomic<uint8_t> * done (false);
+		std::atomic<bool> * done = new std::atomic<bool>(false);
+
+		std::cout << "Testing started --- > " << (*done).load(std::memory_order_relaxed) << std::endl;
     		
 		/*for( int i=0; i<10; ++i ) {
         		queue.push(i);
@@ -170,6 +172,8 @@ int main(int argc, char * argv[])
 			std::cout,
 			queue,
 			done);
+
+		std::cout << "Testing done --- > " << (*done).load(std::memory_order_relaxed) << std::endl;
 
 		
 		if (gfa1.isSet()) {

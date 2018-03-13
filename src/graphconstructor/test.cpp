@@ -207,7 +207,7 @@ namespace TwoPaCo
 						{
 							std::stringstream null;
 							tbb::concurrent_queue<TwoPaCo::EdgeResult> queue;
-							std::atomic<uint8_t> * done (false);
+							std::atomic<bool> * done (false);
 							std::unique_ptr<TwoPaCo::VertexEnumerator> vid = CreateEnumerator(fileName, k, filterBits, hf, r, thr, 
 									temporaryDir, temporaryEdge, null, queue, done);
 							for (size_t i = 0; i < chrNumber; i++)
