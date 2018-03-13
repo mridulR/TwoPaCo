@@ -14,6 +14,7 @@
 #include <tbb/parallel_sort.h>
 
 #include <graphdump/graphdump.h>
+#include <atomic>
 
 #include <dnachar.h>
 #include <streamfastaparser.h>
@@ -379,7 +380,8 @@ public:
 
 template<class G>
 void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std::string> & genomes, 
-	size_t k, bool prefix, G g, std::string file_name)
+	size_t k, bool prefix, G g, std::string file_name, tbb::concurrent_queue<TwoPaCo::JunctionPosition> *queue,
+                std::atomic<bool> * done)
 {	
 	std::vector<uint64_t> chrSegmentLength;
 	std::vector<std::string> chrSegmentId;
@@ -414,6 +416,90 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 #ifdef _DEBUG
 	std::map<int64_t, std::string> segmentBody;
 #endif
+
+	bool begin_set = (*queue).try_pop(begin);
+	chrReader.NextChr(chr);
+
+	while (!begin_set) {
+	    begin_set = (*queue).try_pop(begin);
+	}
+	
+	// Hello
+	while (!((*done).load(std::memory_order_relaxed)) || !(*queue).empty()) {
+	    if (!(*queue).empty()) {
+	        (*queue).try_pop(end);
+	
+		                         if (begin.GetChr() == end.GetChr())
+                         {               
+                                 Segment nowSegment(begin, end, chr[begin.GetPos() + k], TwoPaCo::DnaChar::ReverseChar(chr[end.GetPos() - 1]));
+                                 int64_t segmentId = nowSegment.GetSegmentId();
+                                 currentPath.push_back(segmentId); 
+                                 uint64_t segmentSize = end.GetPos() + k - begin.GetPos();
+                                 if (!seen[Abs(segmentId)])
+                                 {
+                                         //std::cout << "S\t" << Abs(segmentId) << "\t";
+                                         std::stringstream ss;       
+                                         if (segmentId > 0)
+                                         {
+                                                 std::copy(chr.begin() + begin.GetPos(), chr.begin() + end.GetPos() + k, std::ostream_iterator<char>(ss));
+                                 
+                                         }
+                                         else
+                                         {
+                                                 std::string buf = TwoPaCo::DnaChar::ReverseCompliment(std::string(chr.begin() + begin.GetPos(), chr.begin() + end.GetPos() + k));
+                                                 std::copy(buf.begin(), buf.end(), std::ostream_iterator<char>(ss));
+                                         }
+                                 
+                                         g.Segment(segmentId, segmentSize, ss.str(), os);
+                                         seen[Abs(segmentId)] = true;
+                                 }
+ 
+ #ifdef _DEBUG                   
+                                 int64_t absSegmentId = Abs(segmentId);
+                                 std::string buf = segmentId > 0 ? std::string(chr.begin() + begin.GetPos(), chr.begin() + end.GetPos() + k) : 
+                                         TwoPaCo::DnaChar::ReverseCompliment(std::string(chr.begin() + begin.GetPos(), chr.begin() + end.GetPos() + k));
+                                 if (segmentBody.count(absSegmentId) == 0)
+                                 {
+                                         segmentBody[absSegmentId] = buf;
+                                 }       
+                                 else
+                                 {
+                                         assert(segmentBody[absSegmentId] == buf);
+                                 }
+ #endif                          
+                                 g.Occurrence(segmentId, segmentSize, chrSegmentId[seqId], chrSegmentLength[seqId],
+                                         begin.GetPos(), end.GetPos(), k, os);
+                                 //std::cout << "C\t" << Abs(segmentId) << '\t' << Sign(segmentId) << '\t' << chrSegmentId[seqId] << "\t+\t" << begin.GetPos() << std::endl;
+                                 
+                                 if (prevSegmentId != NO_SEGMENT)
+                                 {
+                                         //std::cout << "L\t" << Abs(prevSegmentId) << '\t' << Sign(prevSegmentId) << '\t' << Abs(segmentId) << '\t' << Sign(segmentId) << '\t' << k << 'M' << std::endl;
+                                         g.Edge(prevSegmentId, prevSegmentSize, segmentId, segmentSize, k, os);
+                                 }                             
+                                 
+                                 prevSegmentId = segmentId;
+                                 prevSegmentSize = segmentSize;
+                                 begin = end;
+				     }
+                         else
+                         {
+                                 g.FlushPath(currentPath, chrSegmentId[seqId], k, os);
+                                 chrReader.NextChr(chr);
+                                 prevSegmentId = 0;
+                                 begin = end;
+ 
+                                 if (begin.GetChr() != ++seqId)
+                                 {
+                                         throw std::runtime_error("The input is corrupted");
+                                 }
+                         }
+		
+	    }
+	}
+
+	// Hello
+
+	/**
 	if (reader.NextJunctionPosition(begin))
 	{
 		chrReader.NextChr(chr);
@@ -484,8 +570,8 @@ void GenerateGfaOutput(const std::string & inputFileName, const std::vector<std:
 				}
 			}
 		}
-	}
-
+	} **/
+        
 	g.FlushPath(currentPath, chrSegmentId[seqId], k, os);
 	fb.close();
 }
@@ -620,7 +706,8 @@ void GenerateDotOutput(const std::string & inputFileName)
 
 
 
- int my_main(int argc, char * argv[], std::string file_name)
+ int my_main(int argc, char * argv[], std::string file_name, tbb::concurrent_queue<TwoPaCo::JunctionPosition> *queue,
+                std::atomic<bool> * done)
 {
 	std::vector<std::string> format;
 	format.push_back("seq");
@@ -688,7 +775,7 @@ void GenerateDotOutput(const std::string & inputFileName)
 			}
 
 			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(),
-				 prefix.getValue(), Gfa1Generator(), file_name);
+				 prefix.getValue(), Gfa1Generator(), file_name, queue, done);
 		}
 		else if (outputFileFormat.getValue() == format[4])
 		{
@@ -698,7 +785,7 @@ void GenerateDotOutput(const std::string & inputFileName)
 			}
 
 			GenerateGfaOutput(inputFileName.getValue(), seqFileName.getValue(), kvalue.getValue(), 
-				prefix.getValue(), Gfa2Generator(), file_name);
+				prefix.getValue(), Gfa2Generator(), file_name, queue, done);
 		}
 		else if (outputFileFormat.getValue() == format[5])
 		{
@@ -725,7 +812,8 @@ void GenerateDotOutput(const std::string & inputFileName)
 	return 0;
 }
 
-void run_graph_dump(int argc, char * argv[], std::string file_name) {
-    my_main(argc, argv, file_name);
+void run_graph_dump(int argc, char * argv[], std::string file_name, tbb::concurrent_queue<TwoPaCo::JunctionPosition> *queue,
+     		std::atomic<bool> * done) {
+    my_main(argc, argv, file_name, queue, done);
 }
 

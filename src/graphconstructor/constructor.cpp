@@ -150,7 +150,7 @@ int main(int argc, char * argv[])
 		std::atomic<bool> * done = new std::atomic<bool>(false);
 
 		std::cout << "Testing started --- > " << (*done).load(std::memory_order_relaxed) << std::endl;
-    		
+    			
 		/*for( int i=0; i<10; ++i ) {
         		queue.push(i);
 		}
@@ -170,11 +170,11 @@ int main(int argc, char * argv[])
 			tmpDirName.getValue(),
 			outFileName.getValue(),
 			std::cout,
-			queue,
+			&queue,
 			done);
 
 		std::cout << "Testing done --- > " << (*done).load(std::memory_order_relaxed) << std::endl;
-
+		std::cout << "Testing done size --- > " << queue.unsafe_size() << std::endl;
 		
 		if (gfa1.isSet()) {
                         char* argv[8];
@@ -191,7 +191,7 @@ int main(int argc, char * argv[])
 			argv[6] = "-s";
 			argv[7] = new char[fileName.getValue()[0].length() + 1];
 			strcpy(argv[7], fileName.getValue()[0].c_str());
-                        run_graph_dump(8, argv, gfa1.getValue());
+                        run_graph_dump(8, argv, gfa1.getValue(), &queue, done);
 
 		} 
 		
