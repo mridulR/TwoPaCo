@@ -21,7 +21,6 @@
 
 #include <junctionapi/junctionapi.h>
 
-#include "EdgeResult.h"
 #include "vertexrollinghash.h"
 #include "streamfastaparser.h"
 #include "bifurcationstorage.h"
@@ -52,7 +51,7 @@ namespace TwoPaCo
 		const std::string & tmpFileName,
 		const std::string & outFileName,
 		std::ostream & logStream,
-		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+		tbb::concurrent_queue<TwoPaCo::JunctionPosition> queue,
                 std::atomic<bool> * done);
 
 	template<size_t CAPACITY>
@@ -136,7 +135,7 @@ namespace TwoPaCo
 			size_t threads,
 			const std::string & tmpDirName,
 			const std::string & outFileNamePrefix,
-			std::ostream & logStream, tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+			std::ostream & logStream, tbb::concurrent_queue<TwoPaCo::JunctionPosition> queue,
  			std::atomic<bool> * done) : vertexSize_(vertexLength),
 			hashFunctionSeed_(hashFunctions, vertexLength, filterSize),
 			filterDumpFile_(tmpDirName + "/filter.bin")
@@ -765,11 +764,11 @@ namespace TwoPaCo
 			tbb::mutex & errorMutex;
 		};
 
-		/*struct EdgeResult
+		struct EdgeResult
 		{
 			uint32_t pieceId;
 			std::vector<JunctionPosition> junction;
-		};*/
+		};
 
 		static bool FlushEdgeResults(std::deque<EdgeResult> & result,
 			JunctionPositionWriter & writer,

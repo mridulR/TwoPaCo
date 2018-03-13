@@ -24,7 +24,7 @@ namespace TwoPaCo
 			const std::string & tmpFileName,
 			const std::string & outFileName,
 			std::ostream & logStream,
-			tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+			tbb::concurrent_queue<TwoPaCo::JunctionPosition> queue,
                 	std::atomic<bool> * done)
 		{
 			size_t neededCapacity = CalculateNeededCapacity(vertexLength);
@@ -66,7 +66,7 @@ namespace TwoPaCo
 			const std::string & tmpFileName,
 			const std::string & outFileName,
 			std::ostream & logStream,
-			tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+			tbb::concurrent_queue<TwoPaCo::JunctionPosition> queue,
                 	std::atomic<bool> * done)
 		{
 			throw std::runtime_error("The value of K is too big. Please refer to documentaion how to increase the max supported value of K.");
@@ -83,7 +83,7 @@ namespace TwoPaCo
 		const std::string & tmpFileName,
 		const std::string & outFileName,
 		std::ostream & logStream,
-		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+		tbb::concurrent_queue<TwoPaCo::JunctionPosition> queue,
                 std::atomic<bool> * done)
 	{
 		return CreateEnumeratorImpl<1>(fileName,

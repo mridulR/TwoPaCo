@@ -17,7 +17,7 @@
 
 #include <tbb/concurrent_queue.h>
 #include "../common/graphdump/graphdump.h"
-#include "../common/EdgeResult.h"
+#include "../common/junctionapi/junctionapi.h"
 
 #include "test.h"
 #include "assemblyedgeconstructor.h"
@@ -146,7 +146,7 @@ int main(int argc, char * argv[])
 			return 0;
 		}
 
-		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue;
+		tbb::concurrent_queue<TwoPaCo::JunctionPosition> queue;
 		std::atomic<bool> * done = new std::atomic<bool>(false);
 
 		std::cout << "Testing started --- > " << (*done).load(std::memory_order_relaxed) << std::endl;
