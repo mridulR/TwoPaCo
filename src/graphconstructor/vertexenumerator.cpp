@@ -23,7 +23,9 @@ namespace TwoPaCo
 			size_t threads,
 			const std::string & tmpFileName,
 			const std::string & outFileName,
-			std::ostream & logStream)
+			std::ostream & logStream,
+			tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+                	std::atomic<uint8_t> * done)
 		{
 			size_t neededCapacity = CalculateNeededCapacity(vertexLength);
 			if (CAPACITY == neededCapacity)
@@ -36,7 +38,9 @@ namespace TwoPaCo
 					threads,
 					tmpFileName,
 					outFileName,
-					logStream));
+					logStream,
+					queue,
+					done));
 			}
 			
 			return CreateEnumeratorImpl<CAPACITY + 1>(fileName,
@@ -47,7 +51,9 @@ namespace TwoPaCo
 				threads,
 				tmpFileName,
 				outFileName,
-				logStream);
+				logStream,
+				queue,
+				done);
 		}
 
 		template<>
@@ -59,7 +65,9 @@ namespace TwoPaCo
 			size_t threads,
 			const std::string & tmpFileName,
 			const std::string & outFileName,
-			std::ostream & logStream)
+			std::ostream & logStream,
+			tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+                	std::atomic<uint8_t> * done)
 		{
 			throw std::runtime_error("The value of K is too big. Please refer to documentaion how to increase the max supported value of K.");
 			return 0;
@@ -74,7 +82,9 @@ namespace TwoPaCo
 		size_t threads,
 		const std::string & tmpFileName,
 		const std::string & outFileName,
-		std::ostream & logStream)
+		std::ostream & logStream,
+		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue,
+                std::atomic<uint8_t> * done)
 	{
 		return CreateEnumeratorImpl<1>(fileName,
 			vertexLength,
@@ -84,6 +94,8 @@ namespace TwoPaCo
 			threads,
 			tmpFileName,
 			outFileName,
-			logStream);
+			logStream,
+			queue,
+			done);
 	}
 }

@@ -17,12 +17,11 @@
 
 #include <tbb/concurrent_queue.h>
 #include "../common/graphdump/graphdump.h"
+#include "../common/EdgeResult.h"
 
 #include "test.h"
 #include "assemblyedgeconstructor.h"
 
-using namespace tbb;
-using namespace std;
 
 size_t Atoi(const char * str)
 {
@@ -147,8 +146,10 @@ int main(int argc, char * argv[])
 			return 0;
 		}
 
-		concurrent_queue<int> queue;
-    		for( int i=0; i<10; ++i ) {
+		tbb::concurrent_queue<TwoPaCo::EdgeResult> queue;
+		std::atomic<uint8_t> * done (false);
+    		
+		/*for( int i=0; i<10; ++i ) {
         		queue.push(i);
 		}
     
@@ -156,7 +157,8 @@ int main(int argc, char * argv[])
     		for( iter i(queue.unsafe_begin()); i!=queue.unsafe_end(); ++i ) {
         		cout << *i << " test ------ ";
 		}
-    		cout << endl;	
+    		cout << endl;
+		*/
 		
 		std::unique_ptr<TwoPaCo::VertexEnumerator> vid = TwoPaCo::CreateEnumerator(fileName.getValue(),
 			kvalue.getValue(), filterSize.getValue(),
@@ -165,7 +167,9 @@ int main(int argc, char * argv[])
 			threads.getValue(),
 			tmpDirName.getValue(),
 			outFileName.getValue(),
-			std::cout);
+			std::cout,
+			queue,
+			done);
 
 		
 		if (gfa1.isSet()) {
